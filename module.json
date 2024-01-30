@@ -1,0 +1,38 @@
+{
+  "name": "SSLCommerzPaymentGateway",
+  "alias": "sslcommerzpaymentgateway",
+  "description": "",
+  "keywords": [],
+  "priority": 0,
+  "providers": [
+    "Modules\\SSLCommerzPaymentGateway\\Providers\\SSLCommerzPaymentGatewayServiceProvider"
+  ],
+  "aliases": {},
+  "files": [],
+  "requires": [],
+  "nazmartMetaData": {
+    "paymentGateway": {
+      "name": "SSLCommerz",
+      "slug": "sslcommerz",
+      "tenant": true,
+      "chargeCustomerMethodNameSpace": "Modules\\SSLCommerzPaymentGateway\\Http\\Controllers\\SSLCommerzPaymentGatewayController",
+      "chargeCustomerMethodName": "chargeCustomer",
+      "test_mode": false,
+      "status": true,
+      "extraInfoMarkupBlade": "inline-kinetickpey",
+      "logo_file": "payment-logo.jpeg",
+      "admin_settings": {
+        "show_admin_landlord": true,
+        "show_admin_tenant": true,
+        "menu_item": [
+          {
+            "id": "sslcommerz-settings-menu",
+            "label": "SSL Commerz",
+            "route": "sslcommerzpaymentgateway.landlord.admin.settings",
+            "tenantRoute": "sslcommerzpaymentgateway.tenant.admin.settings"
+          }
+        ]
+      }
+    }
+  }
+}
