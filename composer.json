@@ -19,5 +19,8 @@
         "psr-4": {
             "Modules\\SiteWayPaymentGateway\\": ""
         }
+    },
+    "require": {
+        "guzzlehttp/guzzle": "^7.8"
     }
 }

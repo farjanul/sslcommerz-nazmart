@@ -32,6 +32,7 @@ use Modules\Wallet\Entities\WalletHistory;
 use Modules\Wallet\Http\Services\WalletService;
 use Xgenious\Paymentgateway\Base\PaymentGatewayHelpers;
 use Xgenious\Paymentgateway\Facades\XgPaymentGateway;
+use GuzzleHttp\Client;
 
 class SSLCommerzPaymentGatewayController extends Controller
 {
@@ -109,17 +110,20 @@ class SSLCommerzPaymentGatewayController extends Controller
             'value_a' => $args["payment_type"]
         ];
 
-        $url = "https://sandbox.sslcommerz.com/gwprocess/v4/api.php"; // securepay
-        $response = Http::post($url, $requestPayload);
+        $url = "https://securepay.sslcommerz.com/gwprocess/v4/api.php";
+        $client = new Client();
+        $response = $client->post($url, [
+            'form_params' => $requestPayload,
+        ]);
 
-        dd($response, $requestPayload, $url);
+        $data = json_decode($response->getBody(), true);
 
-        if ($response['status'] == 'FAILED') {
+        if ($data['status'] === 'FAILED') {
             return $this->landlordPricePlanPostPaymentCancelPage();
         }
 
-        if ($response) {
-            return redirect($response['GatewayPageURL']);
+        if ($data) {
+            return redirect($data['GatewayPageURL']);
         }
 
         abort(501, __("failed to connect SSL Commerz server."));
@@ -186,13 +190,10 @@ class SSLCommerzPaymentGatewayController extends Controller
      */
     private function capturePaymentAndVerifyAgain(array $data)
     {
-
-        dd($data);
-
-        if ($data['pay_status'] == 'Successful') {
+        if ($data['status'] == 'VALID') {
             return $this->verified_data([
                 'status' => 'complete',
-                'transaction_id' => $data['mer_txnid'],
+                'transaction_id' => $data['tran_id'],
                 'order_id' => Session::get("sslcommerz_last_order_id"),
                 'order_type' => $data['value_a'] ?? "",
                 "history_id" => "" // property_exists($order_description,"history_id") ? $order_description->history_id : " "
