@@ -7,10 +7,10 @@
 {{--                <h4 class="card-title mb-4">{{__('Aamar Pay Settings')}}</h4>--}}
                 <x-error-msg/>
                 <x-flash-msg/>
-                <form class="forms-sample" method="post" action="{{route('aamarpaypaymentgateway.'.route_prefix().'admin.settings')}}">
+                <form class="forms-sample" method="post" action="{{route('sslcommerzpaymentgateway.'.route_prefix().'admin.settings')}}">
                     @csrf
                     <x-fields.input type="text" value="{{get_static_option('sslcommerz_store_id')}}" name="sslcommerz_store_id" label="{{__('Store ID')}}"/>
-                    <x-fields.input type="text" value="{{get_static_option('sslcommerz_signature_key')}}" name="sslcommerz_signature_key" label="{{__('Signature Key')}}"/>
+                    <x-fields.input type="text" value="{{get_static_option('sslcommerz_signature_key')}}" name="sslcommerz_signature_key" label="{{__('Secret Key')}}"/>
 
 
 {{--                    <x-fields.switcher label="{{__('Kineticpay Test Mode Enable/Disable')}}" name="kineticpay_test_mode_status" value="{{$kineticpay->test_mode}}"/>--}}

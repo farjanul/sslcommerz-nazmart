@@ -48,11 +48,11 @@ class SSLCommerzPaymentGatewayController extends Controller
     {
         //detect it is coming from which method for which kind of payment
         //detect it for landlord or tenant website
-        if (in_array($args["payment_type"],["price_plan","deposit"]) && $args["payment_for"] === "landlord"){
+        if (in_array($args["payment_type"], ["price_plan", "deposit"]) && $args["payment_for"] === "landlord") {
             return $this->chargeCustomerForLandlordPricePlanPurchase($args);
         }
         // all tenant payment process will from here....
-        if (in_array($args["payment_type"],["shop_checkout"]) && $args["payment_for"] === "tenant"){
+        if (in_array($args["payment_type"], ["shop_checkout"]) && $args["payment_for"] === "tenant") {
             return $this->chargeCustomerForLandlordPricePlanPurchase($args);
         }
         abort(404);
@@ -64,55 +64,65 @@ class SSLCommerzPaymentGatewayController extends Controller
      *
      * This method is responsible for sending request to the payment gatewy provider for redirect or charge your customer
      * */
-    private function chargeCustomerForLandlordPricePlanPurchase($args){
+    private function chargeCustomerForLandlordPricePlanPurchase($args)
+    {
 
         $store_id = get_static_option("sslcommerz_store_id");
         $signature_key = get_static_option("sslcommerz_signature_key");
 
-        if (empty($store_id) || empty($signature_key)){
-            abort(501,__("merchant key no provided"));
+        if (empty($store_id) || empty($signature_key)) {
+            abort(501, __("merchant key no provided"));
         }
-
-        $currentDateTime = now();
-        $milliseconds = round($currentDateTime->micro / 1000);
+        $currentDateTime = microtime(true);
+        $milliseconds = round($currentDateTime * 1000);
 
         $payment_details = $args["payment_details"];
-        Session::put("aamarpay_last_order_id",$payment_details["id"]);
+        Session::put("sslcommerz_last_order_id", $payment_details["id"]);
 
         $callback_url = route('sslcommerzpaymentgateway.tenant.price.plan.ipn');
-        if ($args["payment_for"] === "landlord"){
+        if ($args["payment_for"] === "landlord") {
             $callback_url = route('sslcommerzpaymentgateway.landlord.price.plan.ipn');
         }
 
-        $url = "https://secure.aamarpay.com/jsonpost.php";
-        $response = Http::post($url, [
+        $requestPayload = [
             'store_id' => $store_id,
-            'tran_id' => $milliseconds . Str::random(5),
+            'store_passwd' => $signature_key,
+            'tran_id' => $milliseconds."",
             'success_url' => $callback_url,
             'fail_url' => $callback_url,
             'cancel_url' => $callback_url,
-            'amount' => $payment_details["total_amount"] ?? $payment_details["package_price"],
+            'total_amount' => $payment_details["total_amount"] ?? $payment_details["package_price"],
             'currency' => 'BDT',
-            'signature_key' => $signature_key,
-            'desc' => $payment_details["order_details"] ?? 'Order description',
+            'emi_option' => 0,
             'cus_name' => $payment_details["name"],
             'cus_email' => $payment_details["email"],
             'cus_add1' => $payment_details["address"] ?? '',
-            'cus_add2' => '',
             'cus_city' => $payment_details["city"] ?? '',
-            'cus_state' =>  $payment_details["state"] ?? '',
-            'cus_postcode' => $payment_details["zipcode"] ?? '',
             'cus_country' => 'Bangladesh',
             'cus_phone' => $payment_details["phone"] ?? "+88017xxxxxxxx",
-            'type' => 'json',
-            'opt_a' => $args["payment_type"]
-        ])->json();
+            'shipping_method' => 'NO',
+            'multi_card_name' => "",
+            'num_of_item' => 1,
+            'product_name' => "Test",
+            'product_category' => "Test Category",
+            'product_profile' => "general",
+            'value_a' => $args["payment_type"]
+        ];
 
-         if($response){
-             return redirect($response['payment_url']);
-         }
+        $url = "https://sandbox.sslcommerz.com/gwprocess/v4/api.php"; // securepay
+        $response = Http::post($url, $requestPayload);
 
-        abort(501,__("failed to connect Aamar Pay server."));
+        dd($response, $requestPayload, $url);
+
+        if ($response['status'] == 'FAILED') {
+            return $this->landlordPricePlanPostPaymentCancelPage();
+        }
+
+        if ($response) {
+            return redirect($response['GatewayPageURL']);
+        }
+
+        abort(501, __("failed to connect SSL Commerz server."));
     }
 
 
@@ -123,20 +133,21 @@ class SSLCommerzPaymentGatewayController extends Controller
      *  this is ipn/callback/webhook method for the payment gateway i am implementing, it will received information form the payment gatewya after successful payment by the user
      *
      * */
-    public function landlordPricePlanIpn(Request $request){
+    public function landlordPricePlanIpn(Request $request)
+    {
 
         $payment_data = $this->capturePaymentAndVerifyAgain($request->all());
-        $order_id = random_int(111111,999999) . $payment_data['order_id'] . random_int(111111,999999);
+        $order_id = random_int(111111, 999999) . $payment_data['order_id'] . random_int(111111, 999999);
 
-        if ($payment_data["status"] === "complete"){
-            if ($payment_data["order_type"] === "price_plan"){
+        if ($payment_data["status"] === "complete") {
+            if ($payment_data["order_type"] === "price_plan") {
                 $this->runPostPaymentProcessForLandlordPricePlanSuccessPayment($payment_data);
-                return redirect()->to(route('landlord.frontend.order.payment.success', random_int(111111,999999).$payment_data['order_id'].random_int(111111,999999)));
-            } elseif ($payment_data["order_type"] === "deposit"){
-               return $this->runPostPaymentProcessForLandlordWalletDepositSuccessPayment($payment_data);
-            } elseif ($payment_data["order_type"] === "shop_checkout"){
+                return redirect()->to(route('landlord.frontend.order.payment.success', random_int(111111, 999999) . $payment_data['order_id'] . random_int(111111, 999999)));
+            } elseif ($payment_data["order_type"] === "deposit") {
+                return $this->runPostPaymentProcessForLandlordWalletDepositSuccessPayment($payment_data);
+            } elseif ($payment_data["order_type"] === "shop_checkout") {
                 $this->runPostPaymentProcessForTenantdShopCheckoutSuccessPayment($payment_data);
-                return redirect()->route('tenant.user.frontend.order.payment.success',$order_id);
+                return redirect()->route('tenant.user.frontend.order.payment.success', $order_id);
             }
         }
         return $this->landlordPricePlanPostPaymentCancelPage();
@@ -149,15 +160,16 @@ class SSLCommerzPaymentGatewayController extends Controller
      *  this is ipn/callback/webhook method for the payment gateway i am implementing, it will received information form the payment gatewya after successful payment by the user
      *
      * */
-    public function TenantSiteswayIpn(Request $request){
+    public function TenantSiteswayIpn(Request $request)
+    {
 
         $payment_data = $this->capturePaymentAndVerifyAgain($request->all());
-        $order_id = random_int(111111,999999) . $payment_data['order_id'] . random_int(111111,999999);
+        $order_id = random_int(111111, 999999) . $payment_data['order_id'] . random_int(111111, 999999);
 
-        if ($payment_data["status"] === "complete"){
-            if ($payment_data["order_type"] === "shop_checkout"){
+        if ($payment_data["status"] === "complete") {
+            if ($payment_data["order_type"] === "shop_checkout") {
                 $this->runPostPaymentProcessForTenantdShopCheckoutSuccessPayment($payment_data);
-                return redirect()->route('tenant.user.frontend.order.payment.success',$order_id);
+                return redirect()->route('tenant.user.frontend.order.payment.success', $order_id);
             }
         }
 
@@ -172,22 +184,25 @@ class SSLCommerzPaymentGatewayController extends Controller
      * @param array $
      * @return array
      */
-    private function capturePaymentAndVerifyAgain(array $data){
+    private function capturePaymentAndVerifyAgain(array $data)
+    {
 
-        if($data['pay_status'] == 'Successful'){
+        dd($data);
+
+        if ($data['pay_status'] == 'Successful') {
             return $this->verified_data([
                 'status' => 'complete',
-                'transaction_id' => $data['mer_txnid'] ,
-                'order_id' =>  Session::get("aamarpay_last_order_id"),
-                'order_type' => $data['opt_a'] ?? "",
+                'transaction_id' => $data['mer_txnid'],
+                'order_id' => Session::get("sslcommerz_last_order_id"),
+                'order_type' => $data['value_a'] ?? "",
                 "history_id" => "" // property_exists($order_description,"history_id") ? $order_description->history_id : " "
             ]);
         }
 
         return $this->verified_data([
             'status' => 'failed',
-            'order_id' => Session::get("aamarpay_last_order_id"),
-            'order_type' => $data['opt_a'] ?? ""
+            'order_id' => Session::get("sslcommerz_last_order_id"),
+            'order_type' => $data['value_a'] ?? ""
         ]);
     }
 
@@ -207,29 +222,28 @@ class SSLCommerzPaymentGatewayController extends Controller
 
             } catch (\Exception $exception) {
                 $message = $exception->getMessage();
-                if(str_contains($message,'Access denied')){
-                    if(request()->ajax()){
-                        abort(462,__('Database created failed, Make sure your database user has permission to create database'));
+                if (str_contains($message, 'Access denied')) {
+                    if (request()->ajax()) {
+                        abort(462, __('Database created failed, Make sure your database user has permission to create database'));
                     }
                 }
 
-                $payment_details = PaymentLogs::where('id',$payment_data['order_id'])->first();
-                if(empty($payment_details))
-                {
-                    abort(500,__('Does not exist, Tenant does not exists'));
+                $payment_details = PaymentLogs::where('id', $payment_data['order_id'])->first();
+                if (empty($payment_details)) {
+                    abort(500, __('Does not exist, Tenant does not exists'));
                 }
-                LandlordPricePlanAndTenantCreate::store_exception($payment_details->tenant_id,'Domain create',$exception->getMessage(), 0);
+                LandlordPricePlanAndTenantCreate::store_exception($payment_details->tenant_id, 'Domain create', $exception->getMessage(), 0);
 
                 //todo: send an email to admin that this user databse could not able to create automatically
 
                 try {
                     $message = sprintf(__('Database Creating failed for user id %1$s , please checkout admin panel and generate database for this user from admin panel manually'),
                         $payment_details->user_id);
-                    $subject = sprintf(__('Database Crating failed for user id %1$s'),$payment_details->user_id);
-                    Mail::to(get_static_option('site_global_email'))->send(new BasicMail($message,$subject));
+                    $subject = sprintf(__('Database Crating failed for user id %1$s'), $payment_details->user_id);
+                    Mail::to(get_static_option('site_global_email'))->send(new BasicMail($message, $subject));
 
                 } catch (\Exception $e) {
-                    LandlordPricePlanAndTenantCreate::store_exception($payment_details->tenant_id,'domain failed email',$e->getMessage(), 0);
+                    LandlordPricePlanAndTenantCreate::store_exception($payment_details->tenant_id, 'domain failed email', $e->getMessage(), 0);
                 }
             }
 
@@ -242,7 +256,7 @@ class SSLCommerzPaymentGatewayController extends Controller
 
     /**
      * @method landlordPricePlanPostPaymentUpdateDatabase
-     * @param id $order_id, string  $transaction_id
+     * @param id $order_id , string  $transaction_id
      *
      * update database for the payment success record
      * */
@@ -287,9 +301,8 @@ class SSLCommerzPaymentGatewayController extends Controller
     private function landlordPricePlanPostPaymentTenantCreateEventWithCredentialMail($order_id)
     {
         $log = PaymentLogs::findOrFail($order_id);
-        if (empty($log))
-        {
-            abort(462,__('Does not exist, Tenant does not exists'));
+        if (empty($log)) {
+            abort(462, __('Does not exist, Tenant does not exists'));
         }
 
         $user = User::where('id', $log->user_id)->first();
@@ -298,7 +311,7 @@ class SSLCommerzPaymentGatewayController extends Controller
         if (!empty($log) && $log->payment_status == 'complete' && is_null($tenant)) {
             event(new TenantRegisterEvent($user, $log->tenant_id, get_static_option('default_theme')));
             try {
-                $raw_pass = get_static_option_central('tenant_admin_default_password') ??'12345678';
+                $raw_pass = get_static_option_central('tenant_admin_default_password') ?? '12345678';
                 $credential_password = $raw_pass;
                 $credential_email = $user->email;
                 $credential_username = get_static_option_central('tenant_admin_default_username') ?? 'super_admin';
@@ -320,27 +333,28 @@ class SSLCommerzPaymentGatewayController extends Controller
 
             } catch (\Exception $exception) {
                 $message = $exception->getMessage();
-                if(str_contains($message,'Access denied')){
-                    abort(463,__('Database created failed, Make sure your database user has permission to create database'));
+                if (str_contains($message, 'Access denied')) {
+                    abort(463, __('Database created failed, Make sure your database user has permission to create database'));
                 }
             }
         }
 
         return true;
     }
-/**
- * @method landlordPricePlanPostPaymentUpdateTenant
- * @param array $payment_data
- *
- * */
+
+    /**
+     * @method landlordPricePlanPostPaymentUpdateTenant
+     * @param array $payment_data
+     *
+     * */
     private function landlordPricePlanPostPaymentUpdateTenant(array $payment_data)
     {
-        try{
+        try {
             $payment_log = PaymentLogs::where('id', $payment_data['order_id'])->first();
             $tenant = Tenant::find($payment_log->tenant_id);
 
             \DB::table('tenants')->where('id', $tenant->id)->update([
-                'renew_status' => $renew_status = is_null($tenant->renew_status) ? 0 : $tenant->renew_status+1,
+                'renew_status' => $renew_status = is_null($tenant->renew_status) ? 0 : $tenant->renew_status + 1,
                 'is_renew' => $renew_status == 0 ? 0 : 1,
                 'start_date' => $payment_log->start_date,
                 'expire_date' => get_plan_left_days($payment_log->package_id, $tenant->expire_date)
@@ -349,8 +363,8 @@ class SSLCommerzPaymentGatewayController extends Controller
 
         } catch (\Exception $exception) {
             $message = $exception->getMessage();
-            if(str_contains($message,'Access denied')){
-                abort(462,__('Database created failed, Make sure your database user has permission to create database'));
+            if (str_contains($message, 'Access denied')) {
+                abort(462, __('Database created failed, Make sure your database user has permission to create database'));
             }
         }
     }
@@ -373,8 +387,9 @@ class SSLCommerzPaymentGatewayController extends Controller
      * */
     private function verified_data(array $args)
     {
-        return array_merge(['status' => 'complete'],$args);
+        return array_merge(['status' => 'complete'], $args);
     }
+
     /**
      * write code for post process the payment information
      * @method runPostPaymentProcessForLandlordWalletDepositSuccessPayment
@@ -383,19 +398,20 @@ class SSLCommerzPaymentGatewayController extends Controller
     private function runPostPaymentProcessForLandlordWalletDepositSuccessPayment(array $payment_data)
     {
 //        dd($payment_data);
-        if (isset($payment_data['status']) && $payment_data['status'] === 'complete'){
+        if (isset($payment_data['status']) && $payment_data['status'] === 'complete') {
             $order_id = $payment_data['order_id'];
             $history_id = $payment_data["history_id"];
-            $this->walletDepositUpdateDatabase($order_id, $payment_data['transaction_id'],$history_id);
+            $this->walletDepositUpdateDatabase($order_id, $payment_data['transaction_id'], $history_id);
             $this->walletDepositSendMailToAdmin($order_id);
-            $new_order_id =  $order_id;
+            $new_order_id = $order_id;
             return redirect()->to(route('landlord.user.wallet.history'))->with(['type' => 'success', 'msg' => 'Your wallet successfully credited']);
         }
     }
+
     /**
      * write code for post process the payment information for wallet balance update
      * @method walletDepositUpdateDatabase
-     * @param mixed $order_id, mixed $transaction_id, mixed $history_id
+     * @param mixed $order_id , mixed $transaction_id, mixed $history_id
      * */
     private function walletDepositUpdateDatabase(mixed $order_id, mixed $transaction_id, mixed $history_id)
     {
@@ -409,7 +425,7 @@ class SSLCommerzPaymentGatewayController extends Controller
                 'status' => 1,
             ]);
 
-            $get_balance_from_wallet = Wallet::where('user_id',$deposit_details->user_id)->first();
+            $get_balance_from_wallet = Wallet::where('user_id', $deposit_details->user_id)->first();
             Wallet::where('user_id', $deposit_details->user_id)->update([
                 'balance' => $get_balance_from_wallet->balance + $deposit_details->amount,
             ]);
@@ -430,18 +446,19 @@ class SSLCommerzPaymentGatewayController extends Controller
      * */
     public function walletDepositSendMailToAdmin($last_deposit_id)
     {
-        if(empty($last_deposit_id)){
+        if (empty($last_deposit_id)) {
             return;
         }
         //Send order email to buyer
         try {
-            $message_body = __('Hello an user just deposit to his wallet.').'</br>'.'<span class="verify-code">'.__('Deposit ID: ').$last_deposit_id.'</span>';
+            $message_body = __('Hello an user just deposit to his wallet.') . '</br>' . '<span class="verify-code">' . __('Deposit ID: ') . $last_deposit_id . '</span>';
             \Mail::to(get_static_option('site_global_email'))->send(new BasicMail($message_body, __('Deposit Confirmation')));
 
         } catch (\Exception $e) {
             //
         }
     }
+
     /**
      * write code for post process the payment data for tenant shop checkout
      * @method runPostPaymentProcessForTenantdShopCheckoutSuccessPayment
@@ -460,6 +477,7 @@ class SSLCommerzPaymentGatewayController extends Controller
 
         }
     }
+
     /**
      * write code for post process the payment data for sending mail to admin and user about the product orders
      * @method TenantShopCheckoutSendOrderMail
@@ -472,8 +490,7 @@ class SSLCommerzPaymentGatewayController extends Controller
 
         try {
             //To User/Customer
-            if ($order_details->checkout_type === 'digital')
-            {
+            if ($order_details->checkout_type === 'digital') {
                 Mail::to($order_mail)->send(new ProductOrderEmail($order_details));
             } else {
                 Mail::to($order_mail)->send(new ProductOrderManualEmail($order_details));
@@ -481,9 +498,8 @@ class SSLCommerzPaymentGatewayController extends Controller
 
             // To Admin
             $admin_email = get_static_option('order_receiving_email') ?? get_static_option('tenant_site_global_email');
-            if ($admin_email == null)
-            {
-                $admin = \App\Models\Admin::whereHas("roles", function($q){
+            if ($admin_email == null) {
+                $admin = \App\Models\Admin::whereHas("roles", function ($q) {
                     $q->where("name", "Super Admin");
                 })->first();
                 $admin_email = $admin->email;

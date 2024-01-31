@@ -26,20 +26,18 @@ class SSLCommerzPaymentGatewayAdminPanelController extends Controller
             "sslcommerz_signature_key" => "required|string",
         ]);
 
-        update_static_option("sslcommerz_store_id",$request->aamar_pay_store_id);
-        update_static_option("sslcommerz_signature_key",$request->aamar_pay_signature_key);
+        update_static_option("sslcommerz_store_id",$request->sslcommerz_store_id);
+        update_static_option("sslcommerz_signature_key",$request->sslcommerz_signature_key);
 
         if(is_null(tenant())){
             $jsonModifier = json_decode(file_get_contents("core/Modules/SSLCommerzPaymentGateway/module.json"));
-            $jsonModifier->nazmartMetaData->paymentGateway->status = $request?->aamarpay_status === 'on';
-            $jsonModifier->nazmartMetaData->paymentGateway->test_mode = $request?->aamarpay_test_mode_status === 'on';
-            $jsonModifier->nazmartMetaData->paymentGateway->admin_settings->show_admin_landlord = $request?->aamarpay_landlord_status === 'on';
-            $jsonModifier->nazmartMetaData->paymentGateway->admin_settings->show_admin_tenant = $request?->aamarpay_tenant_status === 'on';
+            $jsonModifier->nazmartMetaData->paymentGateway->status = $request?->sslcommerz_status === 'on';
+            $jsonModifier->nazmartMetaData->paymentGateway->test_mode = $request?->sslcommerz_test_mode_status === 'on';
+            $jsonModifier->nazmartMetaData->paymentGateway->admin_settings->show_admin_landlord = $request?->sslcommerz_landlord_status === 'on';
+            $jsonModifier->nazmartMetaData->paymentGateway->admin_settings->show_admin_tenant = $request?->sslcommerz_tenant_status === 'on';
 
             file_put_contents("core/Modules/SSLCommerzPaymentGateway/module.json",json_encode($jsonModifier));
         }
-
-
 
         return back()->with(["msg" => __("Settings Update"),"type" => "success"]);
     }

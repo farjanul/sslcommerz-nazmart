@@ -4,7 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0ec66000-fccf-4ce4-acb5-9977585039c5" name="Changes" comment="" />
+    <list default="true" id="0ec66000-fccf-4ce4-acb5-9977585039c5" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Http/Controllers/SSLCommerzPaymentGatewayAdminPanelController.php" beforeDir="false" afterPath="$PROJECT_DIR$/Http/Controllers/SSLCommerzPaymentGatewayAdminPanelController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Http/Controllers/SSLCommerzPaymentGatewayController.php" beforeDir="false" afterPath="$PROJECT_DIR$/Http/Controllers/SSLCommerzPaymentGatewayController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Resources/views/admin/settings.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/Resources/views/admin/settings.blade.php" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -30,20 +35,20 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "master",
-    "last_opened_file_path": "/home/farjanul/Desktop/SSLCommerzPaymentGateway/assets/payment-gateway-image",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/farjanul/Desktop/SSLCommerzPaymentGateway/assets/payment-gateway-image&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/assets/payment-gateway-image" />
@@ -79,7 +84,8 @@
       <workItem from="1706601019548" duration="1048000" />
       <workItem from="1706606878383" duration="86000" />
       <workItem from="1706606979813" duration="3245000" />
-      <workItem from="1706611629770" duration="1355000" />
+      <workItem from="1706611629770" duration="1485000" />
+      <workItem from="1706673993753" duration="7452000" />
     </task>
     <servers />
   </component>
