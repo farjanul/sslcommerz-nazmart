@@ -7,11 +7,11 @@ Download this repo as a zip and rename the zip file name to `SSLCommerzPaymentGa
 ![modules_statuses](https://raw.githubusercontent.com/farjanul/sslcommerz-nazmart/master/install-plugin.png)
 
 ## Config Plugin
-Add the module name in your modules_statuses.json file. The file is located in the core directory of the script.
+Add the module name in your `modules_statuses.json` file. The file is located in the core directory of the script.
 
 ![modules_statuses](https://docs.xgenious.com/wp-content/uploads/2023/03/image-11.png)
 
-In the modules_statuses.json file
+In the `modules_statuses.json` file
 ```sh
 {
     ....
@@ -19,7 +19,7 @@ In the modules_statuses.json file
 }
 ```
 
-modules_statuses.json file looks like this
+`modules_statuses.json` file looks like this
 
 ![modules_statuses](https://docs.xgenious.com/wp-content/uploads/2023/03/image-12.png)
 
