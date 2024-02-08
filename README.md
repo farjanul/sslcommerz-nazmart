@@ -1,7 +1,12 @@
 # Plugin Development
 Here is a Plugin with a Custom payment gateway implemented, you can explore it to understand how it works.
 
-## Add Plugin
+## Install Plugin
+Download this repo as a zip and rename the zip file name to `SSLCommerzPaymentGateway.zip`. Then upload this zip file by following the screenshot. 
+
+![modules_statuses](https://raw.githubusercontent.com/farjanul/sslcommerz-nazmart/master/install-plugin.png)
+
+## Config Plugin
 Add the module name in your modules_statuses.json file. The file is located in the core directory of the script.
 
 ![modules_statuses](https://docs.xgenious.com/wp-content/uploads/2023/03/image-11.png)
@@ -9,6 +14,7 @@ Add the module name in your modules_statuses.json file. The file is located in t
 In the modules_statuses.json file
 ```sh
 {
+    ....
     "SSLCommerzPaymentGateway": true
 }
 ```
@@ -16,27 +22,6 @@ In the modules_statuses.json file
 modules_statuses.json file looks like this
 
 ![modules_statuses](https://docs.xgenious.com/wp-content/uploads/2023/03/image-12.png)
-
-
-## Installation
-
-You can easily set up the project by following the steps below. In that case, `Docker` and `Docker Compose` are required.
-
-1. Clone the repo
-   ```sh
-   git clone git@github.com:farjanul/api-gateway.git
-   ```
-   and
-
-   ```sh
-   git clone git@github.com:farjanul/business-service.git
-   ```
-   
-2. Create the `.env` file copying from `.env.example` and update these values for both projects.
-3. Run the project.
-    ```sh
-    docker-compose up --build -d
-    ```
 
 ## Contributing
 
